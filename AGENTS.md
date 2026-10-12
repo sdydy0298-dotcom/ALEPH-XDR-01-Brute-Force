@@ -1,7 +1,10 @@
-# 작업 원칙
-- 심판 계약: xdr/brute-force/decide.mjs 는 import, 파일 I/O, 네트워크 접근 없이 decide(alert) 하나를 export 한다.
-- 0.85 이상 block, 0.50 이상 alert, 나머지는 record.
-- 비밀번호, 토큰, 쿠키, 요청 원문을 출력하거나 커밋하지 않는다.
-- 정상·불확실 이벤트는 거부 규칙에 넣지 않는다. 차단은 증거 경보 ID와 만료 시각을 가진 임시 규칙으로 한정한다.
-- ZTNA 선행 구현과 실제 Wazuh 제공 자료는 없으므로 이 저장소의 판정기는 **로컬 실습용 어댑터**다.
-- 기존 허용 규칙은 수정하지 않는다. 배포용 웹은 공개된 합성 테스트 결과만 보여준다.
+# ALEPH XDR-01 implementation rules
+
+- Judge contract: `xdr/brute-force/decide.mjs` exports `decide(alert)` only; no imports, file I/O, packages, or network calls.
+- Confidence: >=0.85 block, >=0.50 alert, otherwise record.
+- Do not log credentials, secrets, tokens, cookies, or unfiltered event bodies.
+- Only unequivocal repeated failures generate a 15-minute deny candidate with an evidence alert ID.
+- Keep `ztna/rules.json` unchanged; `ztna/evaluate.mjs` merges it with XDR temporary rules.
+- Synthetic fixtures are used because no real Wazuh server / original ZTNA adjudicator was supplied.
+- Test replay is deterministic and writes `xdr/alerts.log` and `xdr/temporary-deny.json`; re-run the test script before committing.
+- Vercel public dashboard reflects the stored simulation report and cannot change access policy.

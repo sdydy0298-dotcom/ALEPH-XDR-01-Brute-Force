@@ -10,10 +10,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: npm test
-      - run: npm run xdr:run -- brute-force
-      - run: npm run build
-      - name: Verify published report is current
+          node-version: '24'
+      - name: Replay fixture and write actual alert and ZTNA artifacts
+        run: npm run xdr:run -- brute-force
+      - name: Verify decision logic and file-backed access policy
+        run: npm test
+      - name: Verify that replay is deterministic
+        run: npm run xdr:run -- brute-force
+      - name: Build the public demonstration site
+        run: npm run build
+      - name: Verify generated files are committed and in sync
         run: |
-          git diff --exit-code -- xdr/brute-force/result.json public/report.json
+          git diff --exit-code -- xdr/brute-force/result.json xdr/alerts.log xdr/temporary-deny.json public/report.json

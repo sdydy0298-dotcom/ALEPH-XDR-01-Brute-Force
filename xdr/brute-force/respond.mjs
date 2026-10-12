@@ -1,28 +1,72 @@
-import {appendFile,readFile,writeFile,mkdir} from 'node:fs/promises';
+import {appendFile, readFile, writeFile, mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
+import {isIP} from 'node:net';
 import {fileURLToPath} from 'node:url';
+import {decide} from './decide.mjs';
 import {checkAccess} from '../../ztna/check.mjs';
-const root=new URL('../',import.meta.url);
-const denyFile=new URL('temporary-deny.json',root);
-const logFile=new URL('alerts.log',root);
-const safeId = value => /^[A-Za-z0-9_.-]{1,64}$/.test(String(value||''))?String(value):'unknown';
-const safeSource = value => typeof value==='string' && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(value) && value.split('.').every(p=>Number(p)<=255) ? value : null;
-export async function respond(alert,decision,{now=new Date(),persist=true}={}) {
-  const data=alert?.data||{};
-  const source=safeSource(data.srcip??alert?.srcip??alert?.source_ip);
-  const id=safeId(alert?.id);
-  const message={alertId:id,action:decision.action,confidence:decision.confidence,reason:decision.reason};
-  const rules = persist ? await readFile(denyFile,'utf8').then(JSON.parse).catch(err=>{if(err.code==='ENOENT')return [];throw err;}) : [];
-  const active=rules.filter(r=>new Date(r.expiresAt)>now);
-  const explicitlyNormal=alert?.outcome==='success'||data?.authentication?.status==='success';
-  if(decision.action==='block' && decision.confidence>=0.85 && source && !explicitlyNormal && id!=='unknown') {
-    const rule={id:'xdr-'+id,action:'deny',source,alertId:id,reason:decision.reason,createdAt:now.toISOString(),expiresAt:new Date(now.getTime()+15*60*1000).toISOString()};
-    if(!active.some(r=>r.id===rule.id)) active.push(rule);
+
+const root = new URL('../', import.meta.url);
+const denyFile = new URL('temporary-deny.json', root);
+const logFile = new URL('alerts.log', root);
+const idOf = value => /^[A-Za-z0-9_.:-]{1,96}$/.test(String(value ?? '')) ? String(value) : null;
+const ipOf = value => typeof value === 'string' && isIP(value.trim()) ? value.trim() : null;
+const oneLine = value => String(value ?? '').replace(/[\r\n\t]/g, ' ').slice(0, 160);
+
+async function readRules() {
+  try {
+    const rules = JSON.parse(await readFile(denyFile, 'utf8'));
+    if (!Array.isArray(rules)) throw new Error('Invalid temporary deny list');
+    return rules;
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
   }
-  if(persist) {
-    await mkdir(dirname(fileURLToPath(denyFile)),{recursive:true});
-    await writeFile(denyFile,JSON.stringify(active,null,2)+'\n');
-    await appendFile(logFile,JSON.stringify({...message,at:now.toISOString()})+'\n');
+}
+
+// The scorer stays pure; only this responder is allowed to persist policy and alerts.
+export async function respond(alert, decision, {now = new Date(), persist = true} = {}) {
+  if (!decision || !['block', 'alert', 'record'].includes(decision.action) ||
+      !Number.isFinite(decision.confidence) || decision.confidence < 0 || decision.confidence > 1) {
+    throw new TypeError('Invalid decision');
   }
-  return {notification:message,rules:active,access:source?checkAccess(source,active,now.getTime()):{action:'allow',reason:'유효한 출발 주소 없음'}};
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new TypeError('Invalid clock');
+
+  const data = alert?.data && typeof alert.data === 'object' ? alert.data : {};
+  const id = idOf(alert?.id);
+  const source = ipOf(data.srcip ?? alert?.srcip ?? alert?.source_ip);
+  const rules = persist ? await readRules() : [];
+  const active = rules.filter(rule => rule?.action === 'deny' && Number.isFinite(Date.parse(rule.expiresAt)) &&
+    Date.parse(rule.expiresAt) > now.getTime());
+  const successful = /^(success|successful|allowed|ok|passed)$/i.test(
+    String(alert?.outcome ?? data.authentication?.status ?? ''));
+  // Defense in depth: callers cannot forge a BLOCK verdict for an otherwise normal event.
+  const verified = decide(alert);
+  if (decision.action === 'block' && decision.confidence >= 0.85 &&
+      verified.action === 'block' && source && id && !successful) {
+    const rule = {
+      id: 'xdr-' + id, action: 'deny', source, alertId: id,
+      reason: oneLine(verified.reason), createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 15 * 60 * 1000).toISOString()
+    };
+    if (!active.some(existing => existing.id === rule.id)) active.push(rule);
+  }
+
+  const notification = {
+    alertId: id ?? 'unknown', action: decision.action,
+    confidence: decision.confidence, reason: oneLine(decision.reason)
+  };
+  if (persist) {
+    await mkdir(dirname(fileURLToPath(denyFile)), {recursive: true});
+    await writeFile(denyFile, JSON.stringify(active, null, 2) + '\n');
+    // A notification is only a block or an alert; normal record events do not spam alerts.log.
+    if (decision.action !== 'record') {
+      await appendFile(logFile, JSON.stringify({...notification, at: now.toISOString()}) + '\n');
+    }
+  }
+  return {
+    notification: decision.action === 'record' ? null : notification,
+    rules: active,
+    access: source ? checkAccess(source, active, now.getTime()) :
+      {action: 'allow', reason: '유효한 출발 주소 없음'}
+  };
 }

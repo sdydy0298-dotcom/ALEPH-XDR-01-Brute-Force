@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "xdr-BF-001",
+    "action": "deny",
+    "source": "198.51.100.14",
+    "alertId": "BF-001",
+    "reason": "T1110-Brute-Force-Single-Account",
+    "createdAt": "2026-10-12T05:00:00.000Z",
+    "expiresAt": "2026-10-12T05:15:00.000Z"
+  },
+  {
+    "id": "xdr-BF-002",
+    "action": "deny",
+    "source": "198.51.100.21",
+    "alertId": "BF-002",
+    "reason": "T1110-Password-Spraying",
+    "createdAt": "2026-10-12T05:00:00.000Z",
+    "expiresAt": "2026-10-12T05:15:00.000Z"
+  },
+  {
+    "id": "xdr-BF-003",
+    "action": "deny",
+    "source": "198.51.100.33",
+    "alertId": "BF-003",
+    "reason": "T1110-Credential-Stuffing-Signal",
+    "createdAt": "2026-10-12T05:00:00.000Z",
+    "expiresAt": "2026-10-12T05:15:00.000Z"
+  },
+  {
+    "id": "xdr-BF-004",
+    "action": "deny",
+    "source": "203.0.113.18",
+    "alertId": "BF-004",
+    "reason": "T1110-Brute-Force-Single-Account",
+    "createdAt": "2026-10-12T05:00:00.000Z",
+    "expiresAt": "2026-10-12T05:15:00.000Z"
+  }
+]
