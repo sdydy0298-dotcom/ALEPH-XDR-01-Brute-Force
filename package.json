@@ -1,0 +1,14 @@
+{
+  "name": "aleph-xdr-01-brute-force",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "xdr:run": "node xdr/run.mjs",
+    "test": "node --test",
+    "build": "node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
