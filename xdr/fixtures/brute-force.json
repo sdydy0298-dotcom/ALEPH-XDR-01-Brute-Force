@@ -1,0 +1,310 @@
+[
+  {
+    "id": "BF-001",
+    "timestamp": "2026-10-12T04:00:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 12,
+      "description": "Repeated failed login attempts"
+    },
+    "data": {
+      "srcip": "198.51.100.14",
+      "dstuser": "admin",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 24,
+        "distinctAccounts": 1,
+        "windowMinutes": 3
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-002",
+    "timestamp": "2026-10-12T04:01:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 10,
+      "description": "Password spraying attempts"
+    },
+    "data": {
+      "srcip": "198.51.100.21",
+      "dstuser": "many-users",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 12,
+        "distinctAccounts": 8,
+        "windowMinutes": 7
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-003",
+    "timestamp": "2026-10-12T04:02:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 14,
+      "description": "Credential stuffing signal"
+    },
+    "data": {
+      "srcip": "198.51.100.33",
+      "dstuser": "multiple-users",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 28,
+        "distinctAccounts": 14,
+        "windowMinutes": 4
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-004",
+    "timestamp": "2026-10-12T04:03:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 11,
+      "description": "Repeated failed login attempts"
+    },
+    "data": {
+      "srcip": "203.0.113.18",
+      "dstuser": "service",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 14,
+        "distinctAccounts": 1,
+        "windowMinutes": 5
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-005",
+    "timestamp": "2026-10-12T04:04:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 7,
+      "description": "Failed login burst"
+    },
+    "data": {
+      "srcip": "203.0.113.19",
+      "dstuser": "operator",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 5,
+        "distinctAccounts": 1,
+        "windowMinutes": 4
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-006",
+    "timestamp": "2026-10-12T04:05:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 6,
+      "description": "Failed login attempts"
+    },
+    "data": {
+      "srcip": "203.0.113.20",
+      "dstuser": "guest",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 4,
+        "distinctAccounts": 1,
+        "windowMinutes": 8
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-007",
+    "timestamp": "2026-10-12T04:06:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 7,
+      "description": "Multiple failed logins"
+    },
+    "data": {
+      "srcip": "203.0.113.21",
+      "dstuser": "team",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 7,
+        "distinctAccounts": 3,
+        "windowMinutes": 6
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-008",
+    "timestamp": "2026-10-12T04:07:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 3,
+      "description": "Login successful"
+    },
+    "data": {
+      "srcip": "192.0.2.10",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "success"
+      },
+      "summary": {
+        "failureCount": 0,
+        "distinctAccounts": 1,
+        "windowMinutes": 5
+      }
+    },
+    "outcome": "success"
+  },
+  {
+    "id": "BF-009",
+    "timestamp": "2026-10-12T04:08:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 4,
+      "description": "Single failed login"
+    },
+    "data": {
+      "srcip": "192.0.2.11",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 1,
+        "distinctAccounts": 1,
+        "windowMinutes": 5
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-010",
+    "timestamp": "2026-10-12T04:09:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 3,
+      "description": "Invalid password on one attempt"
+    },
+    "data": {
+      "srcip": "192.0.2.12",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 2,
+        "distinctAccounts": 1,
+        "windowMinutes": 6
+      }
+    },
+    "outcome": "failed"
+  },
+  {
+    "id": "BF-011",
+    "timestamp": "2026-10-12T04:10:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 3,
+      "description": "Authentication succeeded"
+    },
+    "data": {
+      "srcip": "192.0.2.13",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "success"
+      },
+      "summary": {
+        "failureCount": 0,
+        "distinctAccounts": 1,
+        "windowMinutes": 1
+      }
+    },
+    "outcome": "success"
+  },
+  {
+    "id": "BF-012",
+    "timestamp": "2026-10-12T04:11:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 3,
+      "description": "Login successful"
+    },
+    "data": {
+      "srcip": "192.0.2.14",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "success"
+      },
+      "summary": {
+        "failureCount": 20,
+        "distinctAccounts": 1,
+        "windowMinutes": 4
+      }
+    },
+    "outcome": "success"
+  },
+  {
+    "id": "BF-013",
+    "timestamp": "2026-10-12T04:12:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 2,
+      "description": "Heartbeat check"
+    },
+    "data": {
+      "srcip": "192.0.2.15",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "unknown"
+      },
+      "summary": {
+        "failureCount": 0,
+        "distinctAccounts": 0,
+        "windowMinutes": 3
+      }
+    },
+    "outcome": "unknown"
+  },
+  {
+    "id": "BF-014",
+    "timestamp": "2026-10-12T04:13:00Z",
+    "rule": {
+      "id": 5710,
+      "level": 5,
+      "description": "Slow login failures"
+    },
+    "data": {
+      "srcip": "192.0.2.16",
+      "dstuser": "employee",
+      "authentication": {
+        "status": "failed"
+      },
+      "summary": {
+        "failureCount": 50,
+        "distinctAccounts": 1,
+        "windowMinutes": 30
+      }
+    },
+    "outcome": "failed"
+  }
+]
