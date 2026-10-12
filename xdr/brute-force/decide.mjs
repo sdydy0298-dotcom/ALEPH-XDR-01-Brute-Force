@@ -24,7 +24,7 @@ const numberFrom = (source, keys) => {
 const keys = Object.freeze({
   failure: ['failureCount','failedAttempts','failed_attempts','failed_attempt_count','failure_count',
     'failedCount','failed_count','failCount','fail_count','failures','authFailures',
-    'auth_failures','loginFailures','login_failures','failedLogins','failed_logins',
+    'auth_failures','loginFailures','login_failures','login_failure_count','failedLogins','failed_logins',
     'attemptCount','attempt_count','attempts','count','totalFailures','total_failures','frequency'],
   accounts: ['distinctAccounts','distinct_accounts','uniqueAccounts','unique_accounts','uniqueUsers',
     'unique_users','accountCount','account_count','userCount','user_count','targetAccounts',
@@ -40,10 +40,14 @@ const sourceOf = value => {
   const a=obj(value), d=obj(a.data), source=obj(a.source), client=obj(a.client), net=obj(a.network);
   const win=obj(d.win), event=obj(win.eventdata);
   const v=pick(a.srcip,a.srcIp,a.src_ip,a.source_ip,a.sourceIp,a.client_ip,a.clientIp,
+    typeof a.source==='string'?a.source:null,
     a.ip,source.ip,source.address,client.ip,net.srcip,net.source_ip,
     d.srcip,d.srcIp,d.src_ip,d.source_ip,d.sourceIp,d.client_ip,d.clientIp,d.ip,
     event.ipAddress,event.ipaddress,event.IpAddress,d['win.eventdata.ipAddress']);
-  return txt(v);
+  if(txt(v))return txt(v);
+  const log=txt(pick(a.full_log,a.fullLog,a.log,d.full_log));
+  const matched=log.match(/\bfrom\s+((?:\d{1,3}\.){3}\d{1,3})\b/i);
+  return matched && matched[1].split('.').every(octet=>Number(octet)<=255)?matched[1]:'';
 };
 const accountOf = value => {
   const a=obj(value), d=obj(a.data), auth=obj(d.authentication), win=obj(d.win), event=obj(win.eventdata);
@@ -53,9 +57,9 @@ const accountOf = value => {
 };
 const logText = value => {
   const a=obj(value), d=obj(a.data), rule=obj(a.rule), ev=obj(a.event);
-  return [a.description,a.message,a.full_log,a.fullLog,a.log,rule.description,
-    d.description,d.message,d.full_log,d.log,ev.action,ev.reason,rule.groups?.join?.(' '),
-    a.category,a.type].filter(x=>typeof x==='string').join(' ').replace(/[_-]/g,' ').toLowerCase();
+  return [a.description,a.message,a.rule_description,a.ruleDescription,a.full_log,a.fullLog,a.log,rule.description,
+    d.description,d.message,d.full_log,d.log,d.event_type,d.eventType,ev.action,ev.reason,rule.groups?.join?.(' '),
+    a.category,a.type,a.event_type,a.eventType,a.attack_type].filter(x=>typeof x==='string').join(' ').replace(/[_-]/g,' ').toLowerCase();
 };
 const statusOf = value => {
   const a=obj(value), d=obj(a.data), auth=obj(d.authentication), ev=obj(a.event),
@@ -211,12 +215,14 @@ export function decide(alert) {
     return decision(0.90,spray);
 
   // Clear burst of failed attempts against one account, corroborated by source+time.
-  if(failed && in5 && n>=PATTERNS[0].minFailures && (e.account || distinct>=1) && !e.uncertain)
+  if(failed && in5 && n>=PATTERNS[0].minFailures &&
+     (e.account || distinct>=1 || n>=20 || (e.repeated && (e.level??0)>=9)) &&
+     (!e.uncertain || n>=20))
     return decision(n>=20?0.98:0.93,single);
   // Wazuh correlation signature can establish repeated attacks even if no exact window
   // is supplied in the alert. Single high-level authentication failures cannot.
-  if(e.strong && e.status.failed && !e.uncertain &&
-     (n>=8 || (e.level??0)>=11 && (e.repeated || e.spraying || e.stuffing))) {
+  if(e.strong && !e.uncertain && failed &&
+     (n>=8 || (e.level??0)>=10 && (e.repeated || e.spraying || e.stuffing || (e.level??0)>=12))) {
     return decision(0.88,named+': 상관분석 경보');
   }
 
