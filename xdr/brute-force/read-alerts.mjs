@@ -17,7 +17,7 @@ export function projectAlert(item) {
   return {
     time: redact(item?.timestamp),
     source: isIP(source) ? source : '',
-    account: redact(item?.data?.dstuser ?? item?.data?.username ?? item?.data?.user ?? item?.account ?? item?.username ?? item?.data?.win?.eventdata?.targetUserName),
+    account: redact(item?.data?.dstuser ?? item?.data?.srcuser ?? item?.data?.username ?? item?.data?.user ?? item?.account ?? item?.username ?? item?.data?.win?.eventdata?.targetUserName),
     level: Number.isFinite(lvl) ? lvl : 0,
     description: redact(item?.rule?.description)
   };

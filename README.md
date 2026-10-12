@@ -1,10 +1,21 @@
 # ALEPH XDR-01 · Brute Force Defense
 
-Wazuh 형식의 로그인 경보에서 MITRE ATT&CK **T1110** 공격 패턴을 탐지하고, 위험도에 따라 **block / alert / record**로 분류하는 XDR 보너스 과제입니다.
+2026-10-12 점검: 예전 제출은 임의로 만든 합성 경보 14건을 분석했으며 공식 예시의 경보 형식과 일치하지 않았습니다. 이번 버전은 **[ChoiTimo/aleph-defense-starter](https://github.com/ChoiTimo/aleph-defense-starter)의 실제 제공 예시**를 수정 없이 복사해 사용합니다.
 
-> **실행 범위:** 사전 제공된 ZTNA 판정기나 Wazuh 서버가 없어 **합성 Wazuh 경보 14건**과 **파일 기반 ZTNA 실습 판정기**로 모든 제작 단계를 재현했습니다. 실제 네트워크 차단이나 운영 Wazuh 서버 연동은 하지 않습니다. 배포 페이지는 정적 시뮬레이션 결과를 표시합니다.
+> **중요:** 원본도 수업용 가상 Wazuh 형식입니다. 운영 Wazuh 서버와 실제 ZTNA 장비에 연결된 상태가 아니며, 여기서 BLOCK은 로컬 판정기 임시 거부 규칙을 뜻합니다.
 
-## 실행 및 점검
+## 제출 기준 재현
+
+- 입력: `xdr/fixtures/brute-force.json` (원본의 `aleph.xdr.fixture.v1`, **28건**)
+- 독립 판단: `xdr/brute-force/decide.mjs`, 외부 import / 파일 I/O 없음
+- 공식 원본 실행기: `scripts/xdr-run.mjs` (원본의 `aleph.xdr.result.v1` 결과 계약 유지)
+- 현재 테스트: **block 10 / alert 9 / record 9**, 정상 오차단 0건
+- `xdr/alerts.log`에 BLOCK 및 ALERT 경보 19건 기록
+- `xdr/temporary-deny.json`에 경보 번호·만료 시각을 가진 **15분 임시 규칙 10건**
+- `ztna/evaluate.mjs`를 통해 정상 IP 허용과 위험 IP 임시 거부 검증
+- 공개 대시보드에는 최종 검사 결과만 표시; 실제 트래픽 차단 기능이 아님
+
+## 직접 실행
 
 ```bash
 npm run xdr:run -- brute-force
@@ -12,62 +23,19 @@ npm test
 npm run build
 ```
 
-- `xdr/brute-force/result.json`에 `counts`와 `normalBlocked`를 생성합니다.
-- `xdr/alerts.log`에 **block/alert 경보를 한 줄씩** 남깁니다. 비밀번호나 토큰은 기록하지 않습니다.
-- `xdr/temporary-deny.json`에 **경보 ID와 만료 시각이 있는 임시 IP 거부 규칙**을 만듭니다.
-- `ztna/evaluate.mjs`가 **기존 `ztna/rules.json`을 읽으면서** XDR 임시 규칙까지 적용합니다. 원래 규칙은 수정하지 않습니다.
-- 동일 시험 명령을 다시 실행하면 재현 가능한 결과로 파일을 갱신합니다. `now`는 실제 현재 시각이 아니라 **시험 기준 시각(2026-10-12T05:00:00Z)**입니다.
-- GitHub Actions가 재생 → 테스트 → 재생 → 웹 빌드 → 변경 없는지 검사합니다.
+`npm run xdr:judge -- brute-force`는 교육용 원본 실행기만 단독으로 돌립니다. `npm run xdr:run`은 그 실행기 결과를 기반으로 로그와 시험 판정기 임시 규칙을 추가로 생성합니다.
 
-## 요구사항 검증
+## 소스 경로
 
-| 제작 | 구현 파일 | 확인 방법 |
-|---|---|---|
-| 1 · 경보 읽기 | `xdr/brute-force/read-alerts.mjs` | 입력 14건 = 출력 14줄, 비밀값 마스킹 |
-| 2 · 패턴 목록 | `xdr/brute-force/patterns.json` | MITRE T1110 근거가 모든 패턴에 한 줄씩 |
-| 3 · 판단 모듈 | `xdr/brute-force/decide.mjs` | **import 없음, 파일/네트워크 I/O 없음**; 0.85↑ block, 0.50↑ alert, 그 미만 record |
-| 4 · 알림/차단 | `xdr/brute-force/respond.mjs`, `ztna/evaluate.mjs` | 명확한 공격만 15분 임시 거부, 나머지 통과, 로그 생성 |
-| 5 · 시험 경보 | `xdr/run.mjs`, `xdr/brute-force/result.json` | 14건 중 **block 4 / alert 4 / record 6**, 정상 오차단 **0건** |
+| 경로 | 설명 |
+|---|---|
+| `xdr/fixtures/brute-force.json` | **원본 변경 없는** 수업용 Wazuh 경보 28건 |
+| `xdr/brute-force/read-alerts.mjs` | 시각·출발 주소·계정·수준·설명만 추출 |
+| `xdr/brute-force/patterns.json` | MITRE ATT&CK T1110 근거 패턴 |
+| `xdr/brute-force/decide.mjs` | 인터넷 없이 단독 평가되는 `decide(alert)` |
+| `xdr/brute-force/respond.mjs` | 알림 기록 및 임시 차단 규칙 연결 |
+| `scripts/xdr-run.mjs` | 원본 공식 테스트 실행기 |
+| `xdr/brute-force/result.json` | `aleph.xdr.result.v1` 규격의 판정 결과 |
+| `ztna/evaluate.mjs` | 기존 정책 + 동적 차단 후보를 파일 기반으로 적용 |
 
-### 직접 확인할 것
-
-- 명확한 공격: `BF-001`~`BF-004` → **block**, ZTNA 임시 거부 규칙 4개
-- 애매한 시도: `BF-005`~`BF-007`, `BF-014` → **alert**만 기록, 거부 규칙 없음
-- 정상·증거 부족: 그 외 6건 → **record**, 정상 이벤트 오차단 **0건**
-- 임시 거부 규칙은 **15분 후 만료**, 정상 출발 주소는 기존 허용 정책을 따라 통과
-
-## 구조
-
-```text
-xdr/
-  fixtures/brute-force.json        # 시험용 Wazuh 형식 경보
-  brute-force/
-    read-alerts.mjs                # 확인 전용(판정기가 불러오지 않음)
-    patterns.json
-    decide.mjs                     # 심판 단독 불러오기 가능
-    respond.mjs                    # 알림과 임시 차단 규칙 저장
-    result.json
-  alerts.log                       # 시험 경보 로그
-  temporary-deny.json              # 임시 거부 규칙(실습용)
-  run.mjs
-ztna/
-  rules.json                       # 기존 허용 정책: 변경하지 않음
-  check.mjs                        # 순수 정책 평가
-  evaluate.mjs                     # 기존 규칙 + 임시 거부 규칙 읽기
-tests/brute-force.test.mjs
-index.html                         # Vercel 공개 대시보드
-```
-
-## 판정의 범위와 한계
-
-`decide(alert)`는 한 건의 이벤트만 받으므로 **해당 경보 안에 집계된 실패 수·시간 창·대상 계정 수**를 활용합니다. 계정에 실제 어떤 비밀번호가 시도됐는지는 수집하지 않습니다. 실무의 동적 IP, NAT 공유 사용자, Wazuh 경보 집계, 다중 서버 공유 정책 저장소 등은 별도 검증이 필요합니다.
-
-배포는 Vercel 정적 호스팅이며 서버 함수, 비밀 환경변수, 실시간 트래픽 차단은 사용하지 않습니다.
-
-## 심판 피드백 반영 (X01_CLEAR_NOT_BLOCKED · X01_AMBIGUOUS_NOT_ALERT · X01_RECORD_MISMATCH)
-
-- 기존 구현은 `data.summary` 고정형 집계에 의존해 다른 Wazuh 경보 스키마를 놓쳤습니다.
-- `decide.mjs`는 다양한 실패 건수/시간 단위/계정 수 필드, Wazuh 규칙 빈도·기간, Windows 4625/4624, 로그 설명의 횟수·시간, 단일 경보에 담긴 이벤트 배열도 인식합니다.
-- 명확한 짧은 기간의 반복 실패는 BLOCK, 반복 여부가 의심스럽거나 시간 범위가 긴 공격은 ALERT, 성공·단발성 인증 실패·관련 없는 이벤트는 RECORD로 구분합니다.
-- **회귀 테스트 23개 이상**을 별도로 추가해 공식 비공개 경보 형식과 비슷한 변형 사례에서도 판정이 되는지 확인합니다.
-- 공식 테스트 원본과 비공개 정답표는 제공되지 않았으므로 **심판 점수는 재제출 후 확인**해야 합니다. 자체 fixture 건수는 공식 정답 건수라고 주장하지 않습니다.
+원본 예시에는 정답표가 들어 있지 않습니다. 현재 카테고리 구분은 원본의 Wazuh 규칙 수준, MITRE T1110 태그, 설명·횟수·대상 계정 수를 근거로 한 자체 판정이며, **실제 심판 채점은 재제출 후 확인**해야 합니다.

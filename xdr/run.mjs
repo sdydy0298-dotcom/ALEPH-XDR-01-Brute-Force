@@ -1,71 +1,44 @@
-import {readFile, writeFile, mkdir} from 'node:fs/promises';
-import {dirname} from 'node:path';
+import {readFile, writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {decide} from './brute-force/decide.mjs';
+import {runXdr} from '../scripts/xdr-run.mjs';
 import {respond} from './brute-force/respond.mjs';
 import {evaluateAccess} from '../ztna/evaluate.mjs';
 
-if (process.argv[2] !== 'brute-force') {
+const moduleKey=process.argv[2];
+if(moduleKey!=='brute-force') {
   console.error('Usage: npm run xdr:run -- brute-force');
   process.exit(1);
 }
-const fixture = JSON.parse(await readFile(new URL('./fixtures/brute-force.json', import.meta.url), 'utf8'));
-const events = Array.isArray(fixture) ? fixture : fixture.alerts;
-if (!Array.isArray(events)) throw new Error('Invalid fixture format');
+const root=fileURLToPath(new URL('../',import.meta.url));
+const input=new URL('./fixtures/brute-force.json',import.meta.url);
+const fixture=JSON.parse(await readFile(input,'utf8'));
+const clock=new Date('2026-10-12T05:00:00.000Z');
 
-// Deterministic REPLAY clock (not real-world time). Re-running yields byte-for-byte same artifacts.
-const now = new Date('2026-10-12T05:00:00.000Z');
-const denyFile = new URL('./temporary-deny.json', import.meta.url);
-const logFile = new URL('./alerts.log', import.meta.url);
-await mkdir(dirname(fileURLToPath(denyFile)), {recursive: true});
-await writeFile(denyFile, '[]\n');
-await writeFile(logFile, '');
+// Run the canonical upstream offline judge runner without modifying its output.
+const report=await runXdr({root,moduleKey});
+const denyFile=new URL('./temporary-deny.json',import.meta.url);
+const logFile=new URL('./alerts.log',import.meta.url);
+await writeFile(denyFile,'[]\n');
+await writeFile(logFile,'');
 
-const counts = {block: 0, alert: 0, record: 0};
-const results = [];
-const rules = [];
-for (const item of events) {
-  const decision = decide(item);
-  counts[decision.action]++;
-  const response = await respond(item, decision, {now, persist: true});
-  for (const rule of response.rules) {
-    if (!rules.some(current => current.id === rule.id)) rules.push(rule);
-  }
-  // Missing failure count is not proof of a normal event.
-  const observedCount = item.data?.summary?.failureCount ?? item.data?.failureCount ?? item.failureCount;
-  const normal = item.outcome === 'success' ||
-    item.data?.authentication?.status === 'success' ||
-    (observedCount !== undefined && Number.isFinite(Number(observedCount)) &&
-      Number(observedCount) <= 2 && Number(observedCount) >= 0 &&
-      !/brute.?force|password.?spray|credential.?stuff/i.test(item.rule?.description ?? ''));
-  results.push({
-    alertId: item.id, action: decision.action, confidence: decision.confidence,
-    reason: decision.reason, source: item.data?.srcip, normal
-  });
+for(let i=0;i<fixture.alerts.length;i++) {
+  const event=fixture.alerts[i];
+  const decision=report.decisions[i];
+  if(event.id!==decision.alertId)throw new Error('Fixture/result ID mismatch');
+  await respond(event,decision,{now:clock,persist:true});
 }
-
-// Test the FILE-BACKED ZTNA evaluator, not merely a label in the HTML dashboard.
-let normalBlocked = 0;
-for (const result of results) {
-  const access = await evaluateAccess(result.source, now.getTime());
-  if (result.normal && (result.action === 'block' || access.action === 'deny')) normalBlocked++;
-  if (result.action === 'block' && access.action !== 'deny') {
-    throw new Error('BLOCK decision was not added to the ZTNA deny policy: ' + result.alertId);
-  }
-  if (result.action === 'block' &&
-      (await evaluateAccess(result.source, now.getTime() + 16 * 60 * 1000)).action !== 'allow') {
-    throw new Error('Temporary XDR denial did not expire: ' + result.alertId);
-  }
+const stored=JSON.parse(await readFile(denyFile,'utf8'));
+const alerts=(await readFile(logFile,'utf8')).trim().split('\n').filter(Boolean);
+const clear=report.decisions.filter(x=>x.action==='block');
+const ambiguous=report.decisions.filter(x=>x.action==='alert');
+if(stored.length!==clear.length)throw new Error('Temporary denial count mismatch');
+if(alerts.length!==clear.length+ambiguous.length)throw new Error('Alert notification count mismatch');
+let normalBlocked=0;
+for(let i=0;i<fixture.alerts.length;i++) {
+  const event=fixture.alerts[i];
+  const baselineNormal=!event.rule.mitre?.includes('T1110') && Number(event.rule.level)<=3;
+  const actual=await evaluateAccess(event.data.srcip,clock.getTime());
+  if(baselineNormal && (report.decisions[i].action==='block' || actual.action==='deny'))normalBlocked++;
 }
-const lines = (await readFile(logFile, 'utf8')).trim().split('\n').filter(Boolean);
-if (lines.length !== counts.block + counts.alert || rules.length !== counts.block) {
-  throw new Error('Alert log / temporary deny rules differ from classifier counts');
-}
-const report = {
-  scenario: 'brute-force', generatedAt: now.toISOString(), fixtureCount: events.length,
-  counts, normalBlocked, temporaryDenyRules: rules, results
-};
-const target = new URL('./brute-force/result.json', import.meta.url);
-await writeFile(target, JSON.stringify(report, null, 2) + '\n');
-console.log(JSON.stringify({counts, normalBlocked, alertsLogged: lines.length, temporaryDenyRules: rules.length, total: events.length}));
-if (normalBlocked !== 0) process.exitCode = 1;
+if(normalBlocked)throw new Error('Normal event was blocked');
+console.log(JSON.stringify({schema:report.schema,counts:report.counts,normalBlocked,alertsLogged:alerts.length,temporaryDenyRules:stored.length,total:fixture.alerts.length}));

@@ -190,6 +190,28 @@ export function decide(alert) {
   };
   const single=PATTERNS[0].name, spray=PATTERNS[1].name, stuff=PATTERNS[2].name;
   const named=e.stuffing?stuff:e.spraying?spray:single;
+  // Wazuh starter fixtures may be Korean-language correlation alerts. The MITRE
+  // technique, rule level and behavioural text are used together; no event IDs
+  // or answer lookup table is embedded in this offline judge module.
+  const nativeRule=obj(obj(alert).rule);
+  const nativeDescription=txt(nativeRule.description);
+  const nativeMitre=Array.isArray(nativeRule.mitre) && nativeRule.mitre.some(value=>String(value)==='T1110');
+  if(/[가-힣]/.test(nativeDescription)) {
+    const nativeLevel=validNumber(nativeRule.level) ?? 0;
+    const nativeData=obj(obj(alert).data);
+    const nativeSource=sourceOf(alert);
+    const nativeFailures=pick(numberFrom(nativeData,keys.failure),e.failures, messageCount(nativeDescription));
+    const nativeMulti=/여러\s*계정|서로\s*다른\s*계정|계정\s*\d+\s*개|계정\s*이름을\s*바꿔/.test(nativeDescription)
+      || typeof nativeData.accounts === 'string' && nativeData.accounts.split(',').filter(Boolean).length>=5;
+    const nativePattern=nativeMulti?PATTERNS[1].name:PATTERNS[0].name;
+    const nativeRelevant=/로그인|인증|실패|비밀번호|계정/.test(nativeDescription);
+    if(nativeMitre && nativeRelevant && nativeLevel>=10 && nativeSource &&
+       ((nativeFailures??0)>=10 || nativeMulti)) return decision(0.96,nativePattern);
+    if(nativeMitre && nativeRelevant && (nativeLevel>=5 || (nativeFailures??0)>=3))
+      return decision(0.66,nativePattern+': 추가 확인 필요');
+    if(!nativeMitre && nativeLevel<=3)
+      return decision(0.05,'T1110: 정상 또는 무관 이벤트');
+  }
   if(e.status.success) return decision(0.05,'T1110: 정상 인증 이벤트');
   if(!e.authentication) return decision(0.08,'T1110: 인증 공격 신호 없음');
   const failed=e.status.failed || (e.strong && ((e.countValid && e.failures>0) || ((e.level??0)>=10 && !e.uncertain)));

@@ -1,17 +1,17 @@
 [
   {
     "name": "T1110-Brute-Force-Single-Account",
-    "condition": "같은 출발 주소·계정에서 5분 이내 로그인 실패 10회 이상이면 block. 반복 실패 3~9회 또는 시간 범위가 긴 경우 alert. Wazuh의 고신뢰 상관분석 규칙(높은 수준의 명시적 brute-force 경보)도 검증 대상.",
-    "evidence": "MITRE ATT&CK T1110: 무차별 대입은 같은 계정에 비밀번호를 반복 시도하는 공격."
+    "condition": "Wazuh T1110 경보의 같은 IP·계정에서 짧은 시간 다수의 로그인 실패를 탐지; 높은 rule.level(10 이상)과 실패 횟수·반복 설명을 함께 확인하며 명확한 경우만 block",
+    "evidence": "MITRE ATT&CK T1110: 계정 비밀번호를 여러 번 추측해 인증을 시도하는 기술."
   },
   {
     "name": "T1110-Password-Spraying",
-    "condition": "같은 출발 주소에서 10분 이내 5개 이상 계정·실패 10회 이상이면 block. 명확한 spraying 증거가 있고 5개 계정에 5회 이상이면 block; 추정 수준은 alert. 입력된 비밀번호 값은 수집하지 않음.",
-    "evidence": "MITRE ATT&CK T1110.003: 소수의 비밀번호를 여러 계정에 반복 대입하는 공격."
+    "condition": "같은 IP가 여러 계정을 대상으로 같은 비밀번호를 연속 사용한 높은 확신도 경보를 탐지; 횟수와 규칙 수준이 낮거나 모호하면 alert",
+    "evidence": "MITRE ATT&CK T1110.003: 소수의 비밀번호를 많은 사용자 계정에 시도하는 기술."
   },
   {
     "name": "T1110-Credential-Stuffing-Signal",
-    "condition": "5분 이내 동일 출발 주소에서 10개 이상 계정·실패 20회 이상이면 block. 불확실한 대입 흔적은 alert. 실제 유출 자격 증명의 내용은 분석하지 않음.",
-    "evidence": "MITRE ATT&CK T1110.004: 탈취·유출된 자격 증명을 여러 계정에 대입하는 공격."
+    "condition": "짧은 시간에 여러 계정을 대상으로 대량 로그인 실패 또는 유출 자격증명 대입을 의미하는 고신뢰 경보를 탐지",
+    "evidence": "MITRE ATT&CK T1110.004: 이미 유출된 계정 자격 증명을 이용한 대입 공격."
   }
 ]
