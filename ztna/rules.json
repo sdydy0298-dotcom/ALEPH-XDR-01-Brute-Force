@@ -1,0 +1,11 @@
+{
+  "description": "실습용 판정기 초기 상태. 기존 허용 정책은 변경하지 않음.",
+  "allow": [
+    {
+      "id": "default-allow",
+      "action": "allow",
+      "description": "시험용 정상 요청 통과"
+    }
+  ],
+  "deny": []
+}
