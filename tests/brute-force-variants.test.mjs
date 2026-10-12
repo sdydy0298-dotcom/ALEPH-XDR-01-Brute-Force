@@ -16,6 +16,7 @@ const fixtures=[
   ['block: flattened fields', {source_ip:ip,username:'admin',outcome:'failed',failed_attempts:'14',window_seconds:120,description:'Repeated failed logins'},'block'],
   ['block: Wazuh frequency/timeframe',sample({rule:{level:12,description:'sshd: multiple authentication failures',frequency:12,timeframe:180}}),'block'],
   ['block: high-confidence correlation event',sample({rule:{level:12,description:'sshd: brute force attack detected'}}),'block'],
+  ['block: native Wazuh 5712 correlated signature', {id:'WZ-5712',data:{srcip:ip,dstuser:'admin'},rule:{id:5712,level:10,description:'sshd: brute force trying to get access to the system'}},'block'],
   ['block: plain-language description count', {srcip:ip,user:'admin',rule:{level:9,description:'18 failed login attempts in 2 minutes'}},'block'],
   ['block: password spraying multiple accounts',sample({data:{srcip:ip,summary:{failureCount:15,distinctAccounts:8,windowMinutes:5}},rule:{level:12,description:'Password spraying attempts'}}),'block'],
   ['block: credential stuffing',sample({data:{srcip:ip,summary:{failureCount:30,distinctAccounts:15,windowMinutes:3}},rule:{level:14,description:'Credential stuffing'}}),'block'],
