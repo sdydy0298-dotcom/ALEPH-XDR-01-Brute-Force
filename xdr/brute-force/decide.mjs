@@ -203,15 +203,15 @@ export function decide(alert) {
   const distinct=e.accounts??(e.account?1:0);
 
   // Account-wide credential attacks need a concentrated multi-account signal.
-  if(e.status.failed && in5 && distinct>=PATTERNS[2].minAccounts &&
+  if(failed && in5 && distinct>=PATTERNS[2].minAccounts &&
      n>=PATTERNS[2].minFailures && !e.uncertain) return decision(0.98,stuff);
-  if(e.status.failed && in10 && distinct>=PATTERNS[1].minAccounts &&
+  if(failed && in10 && distinct>=PATTERNS[1].minAccounts &&
      n>=PATTERNS[1].minFailures && !e.uncertain) return decision(0.94,e.stuffing?stuff:spray);
-  if(e.status.failed && in10 && distinct>=5 && n>=5 && e.spraying && !e.uncertain)
+  if(failed && in10 && distinct>=5 && n>=5 && e.spraying && !e.uncertain)
     return decision(0.90,spray);
 
   // Clear burst of failed attempts against one account, corroborated by source+time.
-  if(e.status.failed && in5 && n>=PATTERNS[0].minFailures && (e.account || distinct>=1) && !e.uncertain)
+  if(failed && in5 && n>=PATTERNS[0].minFailures && (e.account || distinct>=1) && !e.uncertain)
     return decision(n>=20?0.98:0.93,single);
   // Wazuh correlation signature can establish repeated attacks even if no exact window
   // is supplied in the alert. Single high-level authentication failures cannot.
