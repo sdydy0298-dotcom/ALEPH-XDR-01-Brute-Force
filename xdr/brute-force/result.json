@@ -1,0 +1,163 @@
+{
+  "scenario": "brute-force",
+  "generatedAt": "2026-10-12T05:00:00.000Z",
+  "fixtureCount": 14,
+  "counts": {
+    "block": 4,
+    "alert": 3,
+    "record": 7
+  },
+  "normalBlocked": 0,
+  "temporaryDenyRules": [
+    {
+      "id": "xdr-BF-001",
+      "action": "deny",
+      "source": "198.51.100.14",
+      "alertId": "BF-001",
+      "reason": "T1110-Brute-Force-Single-Account",
+      "createdAt": "2026-10-12T05:00:00.000Z",
+      "expiresAt": "2026-10-12T05:15:00.000Z"
+    },
+    {
+      "id": "xdr-BF-002",
+      "action": "deny",
+      "source": "198.51.100.21",
+      "alertId": "BF-002",
+      "reason": "T1110-Password-Spraying",
+      "createdAt": "2026-10-12T05:00:00.000Z",
+      "expiresAt": "2026-10-12T05:15:00.000Z"
+    },
+    {
+      "id": "xdr-BF-003",
+      "action": "deny",
+      "source": "198.51.100.33",
+      "alertId": "BF-003",
+      "reason": "T1110-Credential-Stuffing-Signal",
+      "createdAt": "2026-10-12T05:00:00.000Z",
+      "expiresAt": "2026-10-12T05:15:00.000Z"
+    },
+    {
+      "id": "xdr-BF-004",
+      "action": "deny",
+      "source": "203.0.113.18",
+      "alertId": "BF-004",
+      "reason": "T1110-Brute-Force-Single-Account",
+      "createdAt": "2026-10-12T05:00:00.000Z",
+      "expiresAt": "2026-10-12T05:15:00.000Z"
+    }
+  ],
+  "results": [
+    {
+      "alertId": "BF-001",
+      "action": "block",
+      "confidence": 0.94,
+      "reason": "T1110-Brute-Force-Single-Account",
+      "source": "198.51.100.14",
+      "normal": false
+    },
+    {
+      "alertId": "BF-002",
+      "action": "block",
+      "confidence": 0.91,
+      "reason": "T1110-Password-Spraying",
+      "source": "198.51.100.21",
+      "normal": false
+    },
+    {
+      "alertId": "BF-003",
+      "action": "block",
+      "confidence": 0.96,
+      "reason": "T1110-Credential-Stuffing-Signal",
+      "source": "198.51.100.33",
+      "normal": false
+    },
+    {
+      "alertId": "BF-004",
+      "action": "block",
+      "confidence": 0.94,
+      "reason": "T1110-Brute-Force-Single-Account",
+      "source": "203.0.113.18",
+      "normal": false
+    },
+    {
+      "alertId": "BF-005",
+      "action": "alert",
+      "confidence": 0.62,
+      "reason": "T1110-Brute-Force-Single-Account: 반복 실패 의심",
+      "source": "203.0.113.19",
+      "normal": false
+    },
+    {
+      "alertId": "BF-006",
+      "action": "alert",
+      "confidence": 0.62,
+      "reason": "T1110-Brute-Force-Single-Account: 반복 실패 의심",
+      "source": "203.0.113.20",
+      "normal": false
+    },
+    {
+      "alertId": "BF-007",
+      "action": "alert",
+      "confidence": 0.62,
+      "reason": "T1110-Brute-Force-Single-Account: 반복 실패 의심",
+      "source": "203.0.113.21",
+      "normal": false
+    },
+    {
+      "alertId": "BF-008",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "정상 인증 성공",
+      "source": "192.0.2.10",
+      "normal": true
+    },
+    {
+      "alertId": "BF-009",
+      "action": "record",
+      "confidence": 0.12,
+      "reason": "T1110: 공격 증거 부족",
+      "source": "192.0.2.11",
+      "normal": true
+    },
+    {
+      "alertId": "BF-010",
+      "action": "record",
+      "confidence": 0.12,
+      "reason": "T1110: 공격 증거 부족",
+      "source": "192.0.2.12",
+      "normal": true
+    },
+    {
+      "alertId": "BF-011",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "정상 인증 성공",
+      "source": "192.0.2.13",
+      "normal": true
+    },
+    {
+      "alertId": "BF-012",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "정상 인증 성공",
+      "source": "192.0.2.14",
+      "normal": true
+    },
+    {
+      "alertId": "BF-013",
+      "action": "record",
+      "confidence": 0.12,
+      "reason": "T1110: 공격 증거 부족",
+      "source": "192.0.2.15",
+      "normal": true
+    },
+    {
+      "alertId": "BF-014",
+      "action": "record",
+      "confidence": 0.3,
+      "reason": "T1110: 시간 창 초과",
+      "source": "192.0.2.16",
+      "normal": false
+    }
+  ]
+}
