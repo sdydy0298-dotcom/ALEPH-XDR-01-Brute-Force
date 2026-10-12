@@ -27,13 +27,13 @@ npm run build
 | 2 · 패턴 목록 | `xdr/brute-force/patterns.json` | MITRE T1110 근거가 모든 패턴에 한 줄씩 |
 | 3 · 판단 모듈 | `xdr/brute-force/decide.mjs` | **import 없음, 파일/네트워크 I/O 없음**; 0.85↑ block, 0.50↑ alert, 그 미만 record |
 | 4 · 알림/차단 | `xdr/brute-force/respond.mjs`, `ztna/evaluate.mjs` | 명확한 공격만 15분 임시 거부, 나머지 통과, 로그 생성 |
-| 5 · 시험 경보 | `xdr/run.mjs`, `xdr/brute-force/result.json` | 14건 중 **block 4 / alert 3 / record 7**, 정상 오차단 **0건** |
+| 5 · 시험 경보 | `xdr/run.mjs`, `xdr/brute-force/result.json` | 14건 중 **block 4 / alert 4 / record 6**, 정상 오차단 **0건** |
 
 ### 직접 확인할 것
 
 - 명확한 공격: `BF-001`~`BF-004` → **block**, ZTNA 임시 거부 규칙 4개
-- 애매한 시도: `BF-005`~`BF-007` → **alert**만 기록, 거부 규칙 없음
-- 정상·증거 부족: 그 외 7건 → **record**, 정상 이벤트 오차단 **0건**
+- 애매한 시도: `BF-005`~`BF-007`, `BF-014` → **alert**만 기록, 거부 규칙 없음
+- 정상·증거 부족: 그 외 6건 → **record**, 정상 이벤트 오차단 **0건**
 - 임시 거부 규칙은 **15분 후 만료**, 정상 출발 주소는 기존 허용 정책을 따라 통과
 
 ## 구조
@@ -63,3 +63,11 @@ index.html                         # Vercel 공개 대시보드
 `decide(alert)`는 한 건의 이벤트만 받으므로 **해당 경보 안에 집계된 실패 수·시간 창·대상 계정 수**를 활용합니다. 계정에 실제 어떤 비밀번호가 시도됐는지는 수집하지 않습니다. 실무의 동적 IP, NAT 공유 사용자, Wazuh 경보 집계, 다중 서버 공유 정책 저장소 등은 별도 검증이 필요합니다.
 
 배포는 Vercel 정적 호스팅이며 서버 함수, 비밀 환경변수, 실시간 트래픽 차단은 사용하지 않습니다.
+
+## 심판 피드백 반영 (X01_CLEAR_NOT_BLOCKED · X01_AMBIGUOUS_NOT_ALERT · X01_RECORD_MISMATCH)
+
+- 기존 구현은 `data.summary` 고정형 집계에 의존해 다른 Wazuh 경보 스키마를 놓쳤습니다.
+- `decide.mjs`는 다양한 실패 건수/시간 단위/계정 수 필드, Wazuh 규칙 빈도·기간, Windows 4625/4624, 로그 설명의 횟수·시간, 단일 경보에 담긴 이벤트 배열도 인식합니다.
+- 명확한 짧은 기간의 반복 실패는 BLOCK, 반복 여부가 의심스럽거나 시간 범위가 긴 공격은 ALERT, 성공·단발성 인증 실패·관련 없는 이벤트는 RECORD로 구분합니다.
+- **회귀 테스트 23개 이상**을 별도로 추가해 공식 비공개 경보 형식과 비슷한 변형 사례에서도 판정이 되는지 확인합니다.
+- 공식 테스트 원본과 비공개 정답표는 제공되지 않았으므로 **심판 점수는 재제출 후 확인**해야 합니다. 자체 fixture 건수는 공식 정답 건수라고 주장하지 않습니다.

@@ -12,12 +12,12 @@ function redact(value) {
     .slice(0, 180);
 }
 export function projectAlert(item) {
-  const source = String(item?.data?.srcip ?? item?.srcip ?? '');
+  const source = String(item?.data?.srcip ?? item?.data?.src_ip ?? item?.data?.source_ip ?? item?.srcip ?? item?.source_ip ?? item?.source?.ip ?? item?.data?.win?.eventdata?.ipAddress ?? '');
   const lvl = Number(item?.rule?.level ?? 0);
   return {
     time: redact(item?.timestamp),
     source: isIP(source) ? source : '',
-    account: redact(item?.data?.dstuser ?? item?.account),
+    account: redact(item?.data?.dstuser ?? item?.data?.username ?? item?.data?.user ?? item?.account ?? item?.username ?? item?.data?.win?.eventdata?.targetUserName),
     level: Number.isFinite(lvl) ? lvl : 0,
     description: redact(item?.rule?.description)
   };

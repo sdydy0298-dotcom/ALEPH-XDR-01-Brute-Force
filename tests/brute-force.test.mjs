@@ -35,7 +35,7 @@ test('classifications obey thresholds and protect normal events', () => {
       assert.notEqual(result.action, 'block');
     }
   }
-  assert.deepEqual(counts, {block: 4, alert: 3, record: 7});
+  assert.deepEqual(counts, {block: 4, alert: 4, record: 6});
   assert.deepEqual(report.counts, counts);
   assert.equal(report.normalBlocked, 0);
 });
@@ -52,7 +52,7 @@ test('offline judge decide.mjs has no imports, file IO, or external calls', asyn
 test('persisted alert notifications and temporary rules match verdicts', async () => {
   const lines = (await readFile(new URL('../xdr/alerts.log', import.meta.url), 'utf8')).trim().split('\n').filter(Boolean);
   const stored = JSON.parse(await readFile(new URL('../xdr/temporary-deny.json', import.meta.url), 'utf8'));
-  assert.equal(lines.length, 7);
+  assert.equal(lines.length, 8);
   assert.equal(stored.length, 4);
   for (const line of lines) {
     const item = JSON.parse(line);

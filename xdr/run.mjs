@@ -31,9 +31,13 @@ for (const item of events) {
   for (const rule of response.rules) {
     if (!rules.some(current => current.id === rule.id)) rules.push(rule);
   }
+  // Missing failure count is not proof of a normal event.
+  const observedCount = item.data?.summary?.failureCount ?? item.data?.failureCount ?? item.failureCount;
   const normal = item.outcome === 'success' ||
     item.data?.authentication?.status === 'success' ||
-    (item.data?.summary?.failureCount ?? 0) <= 2;
+    (observedCount !== undefined && Number.isFinite(Number(observedCount)) &&
+      Number(observedCount) <= 2 && Number(observedCount) >= 0 &&
+      !/brute.?force|password.?spray|credential.?stuff/i.test(item.rule?.description ?? ''));
   results.push({
     alertId: item.id, action: decision.action, confidence: decision.confidence,
     reason: decision.reason, source: item.data?.srcip, normal

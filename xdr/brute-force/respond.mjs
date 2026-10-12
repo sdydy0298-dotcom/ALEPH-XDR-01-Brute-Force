@@ -10,6 +10,18 @@ const denyFile = new URL('temporary-deny.json', root);
 const logFile = new URL('alerts.log', root);
 const idOf = value => /^[A-Za-z0-9_.:-]{1,96}$/.test(String(value ?? '')) ? String(value) : null;
 const ipOf = value => typeof value === 'string' && isIP(value.trim()) ? value.trim() : null;
+const sourceOf = alert => {
+  const data = alert?.data ?? {};
+  const direct = data.srcip ?? data.srcIp ?? data.src_ip ?? data.source_ip ??
+    data.sourceIp ?? data.client_ip ?? alert?.srcip ?? alert?.src_ip ??
+    alert?.source_ip ?? alert?.sourceIp ?? alert?.client_ip ??
+    (typeof alert?.source === 'string' ? alert.source : alert?.source?.ip) ??
+    data.win?.eventdata?.ipAddress ?? data['win.eventdata.ipAddress'];
+  if (ipOf(direct)) return ipOf(direct);
+  const raw = String(alert?.full_log ?? data.full_log ?? '');
+  const match = raw.match(/\bfrom\s+((?:\d{1,3}\.){3}\d{1,3})\b/i);
+  return match ? ipOf(match[1]) : null;
+};
 const oneLine = value => String(value ?? '').replace(/[\r\n\t]/g, ' ').slice(0, 160);
 
 async function readRules() {
@@ -32,8 +44,8 @@ export async function respond(alert, decision, {now = new Date(), persist = true
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new TypeError('Invalid clock');
 
   const data = alert?.data && typeof alert.data === 'object' ? alert.data : {};
-  const id = idOf(alert?.id);
-  const source = ipOf(data.srcip ?? alert?.srcip ?? alert?.source_ip);
+  const id = idOf(alert?.id ?? alert?.alert_id ?? alert?.alertId ?? (alert?.rule?.id ? 'rule-'+alert.rule.id+'-'+String(alert.timestamp??'').replace(/[^A-Za-z0-9]/g,'') : null));
+  const source = sourceOf(alert);
   const rules = persist ? await readRules() : [];
   const active = rules.filter(rule => rule?.action === 'deny' && Number.isFinite(Date.parse(rule.expiresAt)) &&
     Date.parse(rule.expiresAt) > now.getTime());
