@@ -146,8 +146,8 @@
     {
       "alertId": "BF-013",
       "action": "record",
-      "confidence": 0.12,
-      "reason": "T1110: 공격 증거 부족",
+      "confidence": 0.05,
+      "reason": "집계된 실패 증거 부족",
       "source": "192.0.2.15",
       "normal": true
     },
