@@ -192,7 +192,7 @@ export function decide(alert) {
   const named=e.stuffing?stuff:e.spraying?spray:single;
   if(e.status.success) return decision(0.05,'T1110: 정상 인증 이벤트');
   if(!e.authentication) return decision(0.08,'T1110: 인증 공격 신호 없음');
-  const failed=e.status.failed || (e.strong && e.countValid && e.failures>0);
+  const failed=e.status.failed || (e.strong && ((e.countValid && e.failures>0) || ((e.level??0)>=11 && !e.uncertain)));
   if(!failed && !e.strong) return decision(0.10,'T1110: 인증 실패 증거 없음');
   if(e.failures===0) return decision(0.08,'T1110: 실패 횟수 0');
   if(!e.source) {
