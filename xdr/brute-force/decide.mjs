@@ -222,7 +222,7 @@ export function decide(alert) {
   // Wazuh correlation signature can establish repeated attacks even if no exact window
   // is supplied in the alert. Single high-level authentication failures cannot.
   if(e.strong && !e.uncertain && failed &&
-     (n>=8 || (e.level??0)>=10 && (e.repeated || e.spraying || e.stuffing || (e.level??0)>=12))) {
+     (n>=8 || (e.level??0)>=10)) {
     return decision(0.88,named+': 상관분석 경보');
   }
 
